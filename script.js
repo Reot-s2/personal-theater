@@ -143,9 +143,9 @@ const me = getMyUser();
 // 백업 기능에서 사용하는, 지금까지 나눈 채팅 로그 전체 기록
 const chatLog = [];
 
-function appendChatMessage({ author, color, avatar, text, system }) {
+function appendChatMessage({ author, color, avatar, text, image, system }) {
   const time = Date.now();
-  chatLog.push({ author, color, avatar, text, system: !!system, time });
+  chatLog.push({ author, color, avatar, text, image, system: !!system, time });
 
   const row = document.createElement("div");
   row.className = system ? "chat-message system" : "chat-message";
@@ -159,11 +159,20 @@ function appendChatMessage({ author, color, avatar, text, system }) {
 
     const bodyEl = document.createElement("div");
     bodyEl.className = "msg-body";
-    bodyEl.innerHTML = `<div class="msg-header"><span class="author" style="color:${color}">${escapeHtml(
-      author
-    )}</span><span class="msg-time">${formatLogTime(time)}</span></div><span class="text">${escapeHtml(
-      text
-    )}</span>`;
+    bodyEl.innerHTML =
+      `<div class="msg-header"><span class="author" style="color:${color}">${escapeHtml(
+        author
+      )}</span><span class="msg-time">${formatLogTime(time)}</span></div>` +
+      (text ? `<span class="text">${escapeHtml(text)}</span>` : "");
+
+    if (image) {
+      const imgEl = document.createElement("img");
+      imgEl.className = "msg-image";
+      imgEl.src = image;
+      imgEl.alt = "";
+      imgEl.addEventListener("click", () => openImageLightbox(image));
+      bodyEl.appendChild(imgEl);
+    }
 
     row.appendChild(avatarEl);
     row.appendChild(bodyEl);
@@ -196,15 +205,17 @@ TheaterSocket.on("presence", (payload) => {
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = chatInput.value.trim();
-  if (!text) return;
+  if (!text && !pendingChatImage) return;
 
   TheaterSocket.send("chat", {
     author: me.name,
     color: me.color,
     avatar: me.avatar,
     text,
+    image: pendingChatImage,
   });
   chatInput.value = "";
+  clearPendingChatImage();
 });
 
 // textarea로 바뀌면서 Enter가 기본적으로 줄바꿈이 되므로, Enter만 누르면 전송하고
@@ -214,6 +225,86 @@ chatInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     chatForm.requestSubmit();
   }
+});
+
+/* ---------- 채팅 이미지 첨부 (업로드 / 붙여넣기) ---------- */
+const chatAttachBtn = document.getElementById("chatAttachBtn");
+const chatImageInput = document.getElementById("chatImageInput");
+const chatAttachmentPreview = document.getElementById("chatAttachmentPreview");
+const chatAttachmentImg = document.getElementById("chatAttachmentImg");
+const chatAttachmentRemoveBtn = document.getElementById("chatAttachmentRemoveBtn");
+
+const CHAT_IMAGE_MAX_DIMENSION = 640;
+let pendingChatImage = null; // 전송 대기 중인 이미지(리사이즈된 data URL)
+
+// 원본 이미지를 적당한 크기로 줄여서(용량 절약) data URL로 변환한다.
+function resizeImageFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, CHAT_IMAGE_MAX_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function setPendingChatImage(dataUrl) {
+  pendingChatImage = dataUrl;
+  chatAttachmentImg.src = dataUrl;
+  chatAttachmentPreview.hidden = false;
+}
+
+function clearPendingChatImage() {
+  pendingChatImage = null;
+  chatAttachmentImg.src = "";
+  chatAttachmentPreview.hidden = true;
+}
+
+chatAttachBtn.addEventListener("click", () => chatImageInput.click());
+
+chatImageInput.addEventListener("change", async () => {
+  const file = chatImageInput.files && chatImageInput.files[0];
+  chatImageInput.value = "";
+  if (!file) return;
+  setPendingChatImage(await resizeImageFile(file));
+});
+
+chatAttachmentRemoveBtn.addEventListener("click", clearPendingChatImage);
+
+// 채팅 입력창에 이미지를 붙여넣으면(Ctrl+V) 바로 첨부되게 한다.
+chatInput.addEventListener("paste", async (e) => {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  const imageItem = [...items].find((item) => item.type.startsWith("image/"));
+  if (!imageItem) return;
+  e.preventDefault();
+  const file = imageItem.getAsFile();
+  if (!file) return;
+  setPendingChatImage(await resizeImageFile(file));
+});
+
+/* ---------- 채팅 이미지 크게 보기 ---------- */
+const imageLightbox = document.getElementById("imageLightbox");
+const imageLightboxImg = document.getElementById("imageLightboxImg");
+
+function openImageLightbox(src) {
+  imageLightboxImg.src = src;
+  imageLightbox.hidden = false;
+}
+
+imageLightbox.addEventListener("click", () => {
+  imageLightbox.hidden = true;
 });
 
 // 연결이 실제로 준비된 뒤(로컬 모드에서도 open은 항상 한 번 발생한다) 입장을 알린다.
@@ -493,7 +584,12 @@ function buildTextLog() {
 
   chatLog.forEach((m) => {
     const time = formatLogTime(m.time);
-    lines.push(m.system ? `[${time}] * ${m.text}` : `[${time}] ${m.author}: ${m.text}`);
+    if (m.system) {
+      lines.push(`[${time}] * ${m.text}`);
+      return;
+    }
+    const text = m.text || (m.image ? "[이미지]" : "");
+    lines.push(`[${time}] ${m.author}: ${text}`);
   });
 
   return lines.join("\n");
@@ -512,6 +608,9 @@ function buildHtmlLog() {
             m.color
           )}">${escapeHtml((m.author || "?").trim().charAt(0).toUpperCase())}</span>`;
 
+      const textHtml = m.text ? `<div class="log-text">${escapeHtml(m.text)}</div>` : "";
+      const imageHtml = m.image ? `<img class="log-image" src="${m.image}" alt="" />` : "";
+
       return `  <div class="log-message">
     ${avatarHtml}
     <div class="log-body">
@@ -520,7 +619,8 @@ function buildHtmlLog() {
       )}">${escapeHtml(m.author)}</span><span class="log-time">${formatLogTime(
         m.time
       )}</span></div>
-      <div class="log-text">${escapeHtml(m.text)}</div>
+      ${textHtml}
+      ${imageHtml}
     </div>
   </div>`;
     })
@@ -541,6 +641,7 @@ function buildHtmlLog() {
   .log-author { font-weight:700; font-size:13px; }
   .log-time { font-size:11px; color:#6d6d78; }
   .log-text { font-size:13px; line-height:1.5; word-break:break-word; }
+  .log-image { max-width:220px; max-height:220px; margin-top:6px; border-radius:10px; display:block; }
   .log-system { color:#9a9aa5; font-style:italic; font-size:12px; margin:10px 0; }
   .log-divider { border-top:1px solid #2a2a33; margin:8px 0 24px; }
 </style>
@@ -588,17 +689,42 @@ function spawnSplat(x, y) {
   mark.className = "fx-splat-mark";
   mark.style.left = `${x}px`;
   mark.style.top = `${y}px`;
+  mark.style.setProperty("--rot", `${randomBetween(0, 360)}deg`);
   reactionStage.appendChild(mark);
   mark.addEventListener("animationend", () => mark.remove());
 
-  const dropCount = 8;
+  // 메인 자국 주위에 작게 튄 자국을 몇 개 더 흩뿌려서 좀 더 "터진" 느낌을 준다.
+  const spatterCount = Math.round(randomBetween(4, 7));
+  for (let i = 0; i < spatterCount; i++) {
+    const angle = randomBetween(0, Math.PI * 2);
+    const dist = randomBetween(22, 52);
+    const size = randomBetween(10, 22);
+    const spatter = document.createElement("span");
+    spatter.className = "fx-splat-spatter";
+    spatter.style.left = `${x + Math.cos(angle) * dist}px`;
+    spatter.style.top = `${y + Math.sin(angle) * dist}px`;
+    spatter.style.width = `${size}px`;
+    spatter.style.height = `${size}px`;
+    spatter.style.marginLeft = `${-size / 2}px`;
+    spatter.style.marginTop = `${-size / 2}px`;
+    spatter.style.setProperty("--rot", `${randomBetween(0, 360)}deg`);
+    reactionStage.appendChild(spatter);
+    spatter.addEventListener("animationend", () => spatter.remove());
+  }
+
+  const dropCount = 10;
   for (let i = 0; i < dropCount; i++) {
     const angle = ((Math.PI * 2) / dropCount) * i + randomBetween(-0.3, 0.3);
-    const dist = randomBetween(18, 46);
+    const dist = randomBetween(20, 56);
+    const size = randomBetween(4, 9);
     const drop = document.createElement("span");
     drop.className = "fx-splat-drop";
     drop.style.left = `${x}px`;
     drop.style.top = `${y}px`;
+    drop.style.width = `${size}px`;
+    drop.style.height = `${size}px`;
+    drop.style.marginLeft = `${-size / 2}px`;
+    drop.style.marginTop = `${-size / 2}px`;
     drop.style.setProperty("--sx", `${Math.cos(angle) * dist}px`);
     drop.style.setProperty("--sy", `${Math.sin(angle) * dist}px`);
     reactionStage.appendChild(drop);

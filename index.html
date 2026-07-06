@@ -107,10 +107,17 @@
           </div>
         </div>
 
+        <div class="chat-attachment-preview" id="chatAttachmentPreview" hidden>
+          <img id="chatAttachmentImg" alt="" />
+          <button type="button" id="chatAttachmentRemoveBtn" title="첨부 취소">✕</button>
+        </div>
+
         <form class="chat-input-area" id="chatForm">
+          <button type="button" class="chat-attach-btn" id="chatAttachBtn" title="이미지 첨부">📎</button>
+          <input type="file" id="chatImageInput" accept="image/*" hidden />
           <textarea
             id="chatInput"
-            placeholder="메시지를 입력하세요"
+            placeholder="메시지를 입력하세요 (이미지 붙여넣기도 가능)"
             autocomplete="off"
             maxlength="200"
             rows="1"
@@ -133,6 +140,10 @@
         <button type="button" id="avatarCropApplyBtn">적용</button>
       </div>
     </div>
+  </div>
+
+  <div class="image-lightbox" id="imageLightbox" hidden>
+    <img id="imageLightboxImg" alt="" />
   </div>
 
   <script src="script.js"></script>

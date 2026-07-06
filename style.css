@@ -672,6 +672,17 @@ button {
   word-break: break-word;
 }
 
+.msg-image {
+  display: block;
+  max-width: 220px;
+  max-height: 220px;
+  margin-top: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  object-fit: cover;
+}
+
 /* 채팅 패널 안으로 옮겨진 리액션 버튼 바 */
 .chat-panel .reaction-bar {
   padding: 8px 10px;
@@ -717,12 +728,63 @@ button {
   display: none;
 }
 
+/* ---------- 이미지 첨부 미리보기 (전송 대기 중인 이미지) ---------- */
+.chat-attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.chat-attachment-preview[hidden] {
+  display: none;
+}
+
+.chat-attachment-preview img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.chat-attachment-preview button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 4px 8px;
+}
+
+.chat-attachment-preview button:hover {
+  color: var(--text-primary);
+}
+
 .chat-input-area {
   display: flex;
   gap: 8px;
   padding: 10px;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
+}
+
+.chat-input-area .chat-attach-btn {
+  flex-shrink: 0;
+  width: 40px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 15px;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.chat-input-area .chat-attach-btn:hover {
+  background: var(--bg-elevated);
+  border-color: #3a3a46;
 }
 
 .chat-input-area textarea {
@@ -790,36 +852,61 @@ button {
   }
 }
 
-/* 야유: 토마토가 부딪힌 자리에 터지는 자국 */
+/* 야유: 토마토가 부딪힌 자리에 터지는 자국 (원이 아니라 삐죽삐죽한 스플래시 모양) */
 .fx-splat-mark {
   position: absolute;
   width: 70px;
   height: 70px;
   margin-left: -35px;
   margin-top: -35px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #ff5c46 0%,
-    #d6301f 55%,
-    rgba(214, 48, 31, 0) 75%
+  background: radial-gradient(circle, #ff6a4d 0%, #d6301f 55%, #8f1e0e 85%);
+  clip-path: polygon(
+    50% 2%, 63% 12%, 78% 6%, 79% 22%, 94% 24%, 87% 38%, 98% 48%,
+    88% 56%, 96% 70%, 80% 68%, 77% 84%, 63% 74%, 54% 92%, 46% 77%,
+    33% 93%, 30% 76%, 13% 83%, 20% 66%, 3% 61%, 17% 49%, 2% 37%,
+    18% 33%, 12% 17%, 30% 21%, 33% 5%, 47% 15%
   );
-  transform: scale(0.2);
+  transform: rotate(var(--rot, 0deg)) scale(0.15);
   opacity: 0;
-  animation: splat-mark 0.45s ease-out forwards;
+  animation: splat-mark 0.5s ease-out forwards;
 }
 
 @keyframes splat-mark {
   0% {
-    transform: scale(0.2);
-    opacity: 0.9;
+    transform: rotate(var(--rot, 0deg)) scale(0.15);
+    opacity: 0.95;
   }
-  55% {
-    transform: scale(1);
-    opacity: 0.85;
+  45% {
+    transform: rotate(var(--rot, 0deg)) scale(1.08);
+    opacity: 0.95;
   }
   100% {
-    transform: scale(1.25);
+    transform: rotate(var(--rot, 0deg)) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* 야유: 메인 자국 주변에 흩어지는 작은 튐 자국들 (터진 느낌을 더해준다) */
+.fx-splat-spatter {
+  position: absolute;
+  background: radial-gradient(circle, #ff6a4d 0%, #d6301f 60%, rgba(143, 30, 14, 0) 85%);
+  clip-path: polygon(
+    50% 5%, 70% 15%, 85% 5%, 90% 25%, 100% 40%, 85% 50%, 95% 70%,
+    75% 65%, 65% 90%, 50% 70%, 30% 92%, 25% 68%, 5% 75%, 15% 50%,
+    0% 35%, 20% 30%, 10% 8%, 35% 20%
+  );
+  transform: rotate(var(--rot, 0deg)) scale(0.2);
+  opacity: 0;
+  animation: splat-spatter 0.5s ease-out forwards;
+}
+
+@keyframes splat-spatter {
+  0% {
+    transform: rotate(var(--rot, 0deg)) scale(0.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: rotate(var(--rot, 0deg)) scale(1);
     opacity: 0;
   }
 }
@@ -1013,4 +1100,26 @@ button {
 #avatarCropApplyBtn:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+}
+
+/* ===================== 채팅 이미지 크게 보기 ===================== */
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: zoom-out;
+}
+
+.image-lightbox[hidden] {
+  display: none;
+}
+
+.image-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 8px;
 }
