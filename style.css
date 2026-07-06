@@ -1,0 +1,844 @@
+/* ===================== 기본 설정 / 다크 테마 변수 ===================== */
+:root {
+  --bg-main: #0b0b0f;
+  --bg-panel: #16161c;
+  --bg-elevated: #1e1e26;
+  --bg-input: #212129;
+  --border-color: #2a2a33;
+  --text-primary: #f5f5f7;
+  --text-secondary: #9a9aa5;
+  --accent: #ff4d67;
+  --accent-hover: #ff6b81;
+  --accent-gold: #ffcf5c;
+  --confetti-colors: #ff4d67, #ffcf5c, #5cd6ff, #7dff8a, #c58cff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system,
+    BlinkMacSystemFont, sans-serif;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 다크 스크롤바 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2f2f3a;
+}
+
+/* ===================== 앱 레이아웃 ===================== */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---------- 상단바 ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.viewer-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ticket-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ticket-nav-link:hover {
+  background: #26262f;
+  border-color: #3a3a46;
+}
+
+/* ---------- 메인 레이아웃 (좌 2.5 : 우 1) ---------- */
+.theater-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* ===================== 좌측 화면 공유 영역 ===================== */
+.screen-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.screen-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #000;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen-placeholder {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin: 0 0 8px;
+}
+
+.screen-placeholder p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.share-start-btn {
+  margin-top: 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.share-start-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* 화면 공유 중에는 <video>만 보이고 안내 문구/버튼은 숨긴다. */
+.screen-video {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.screen-wrapper.sharing .screen-placeholder {
+  display: none;
+}
+
+.screen-wrapper.sharing .screen-video {
+  display: block;
+}
+
+.share-stop-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 10, 13, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 7px 14px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s ease;
+}
+
+.share-stop-btn:hover {
+  background: rgba(255, 77, 103, 0.85);
+}
+
+.screen-wrapper.sharing .share-stop-btn {
+  display: flex;
+}
+
+/* 다른 사람이 공유한 화면은 브라우저 자동재생 정책 때문에 소리가 막힐 수 있어서,
+   그럴 때만 눌러서 소리를 켤 수 있는 버튼을 보여준다. */
+.unmute-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 10, 13, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s ease;
+}
+
+/* [hidden]은 UA 기본 스타일이라 위의 author 규칙(display:flex)에 밀리므로 명시적으로 덮어써야 한다. */
+.unmute-btn[hidden] {
+  display: none;
+}
+
+.unmute-btn:hover {
+  background: rgba(255, 77, 103, 0.85);
+}
+
+/* 리액션 애니메이션이 재생되는 화면 위 오버레이 */
+.reaction-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ---------- 리액션 버튼 바 ---------- */
+.reaction-bar {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.reaction-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+
+.reaction-icon,
+.reaction-label,
+.reaction-count {
+  white-space: nowrap;
+}
+
+.reaction-btn:hover {
+  background: var(--bg-elevated);
+  border-color: #3a3a46;
+}
+
+.reaction-btn:active {
+  transform: scale(0.96);
+}
+
+.reaction-btn.pulse {
+  animation: btn-pulse 0.35s ease;
+}
+
+.reaction-icon {
+  font-size: 18px;
+}
+
+.reaction-count {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 13px;
+  min-width: 14px;
+}
+
+@keyframes btn-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ===================== 우측 채팅 패널 ===================== */
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- 채팅 로그 백업 메뉴 ---------- */
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  font-size: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg-elevated);
+  border-color: #3a3a46;
+}
+
+.backup-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.backup-menu[hidden] {
+  display: none;
+}
+
+.backup-menu button {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.backup-menu button:hover {
+  background: var(--bg-input);
+}
+
+/* ---------- 프로필 트리거 & 설정 메뉴 ---------- */
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 4px 10px 4px 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.profile-trigger:hover {
+  background: var(--bg-elevated);
+  border-color: #3a3a46;
+}
+
+.profile-name {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-menu {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-menu[hidden] {
+  display: none;
+}
+
+.profile-menu-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-menu-row label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.profile-menu-row input[type="text"] {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.profile-menu-row input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.profile-menu-row input[type="color"] {
+  width: 48px;
+  height: 32px;
+  padding: 2px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-preview-lg {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+}
+
+.avatar-upload-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.avatar-upload-btn:hover {
+  border-color: #3a3a46;
+  background: var(--bg-elevated);
+}
+
+.avatar-remove-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.avatar-remove-btn:hover {
+  color: var(--text-primary);
+}
+
+.profile-menu-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-menu-actions button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.profile-menu-actions button:hover {
+  background: var(--accent-hover);
+}
+
+.chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chat-message.system {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.chat-message.presence {
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.msg-avatar {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+.chat-message .msg-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+}
+
+.msg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.msg-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.chat-message .author {
+  font-weight: 700;
+}
+
+.msg-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.chat-message .text {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+/* 채팅 패널 안으로 옮겨진 리액션 버튼 바 */
+.chat-panel .reaction-bar {
+  padding: 10px;
+  border-top: 1px solid var(--border-color);
+  gap: 8px;
+}
+
+.chat-panel .reaction-btn {
+  flex-direction: column;
+  padding: 8px 4px;
+  gap: 3px;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+.chat-panel .reaction-icon {
+  font-size: 18px;
+}
+
+.chat-panel .reaction-count {
+  font-size: 11px;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.chat-input-area input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.chat-input-area input:focus {
+  border-color: var(--accent);
+}
+
+.chat-input-area button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.chat-input-area button:hover {
+  background: var(--accent-hover);
+}
+
+/* ===================== 리액션 애니메이션 ===================== */
+
+/* 야유: 토마토가 화면 밖에서 날아와 부딪히는 애니메이션 */
+.fx-tomato {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 36px;
+  transform: translate(0, 0) scale(0.4);
+  animation-name: tomato-throw;
+  animation-timing-function: cubic-bezier(0.25, 0.55, 0.4, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes tomato-throw {
+  0% {
+    transform: translate(0, 0) scale(0.35) rotate(0deg);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(var(--dx), var(--dy)) scale(1.05) rotate(var(--rot));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.15) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+/* 야유: 토마토가 부딪힌 자리에 터지는 자국 */
+.fx-splat-mark {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  margin-left: -35px;
+  margin-top: -35px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #ff5c46 0%,
+    #d6301f 55%,
+    rgba(214, 48, 31, 0) 75%
+  );
+  transform: scale(0.2);
+  opacity: 0;
+  animation: splat-mark 0.45s ease-out forwards;
+}
+
+@keyframes splat-mark {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.9;
+  }
+  55% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+/* 야유: 부딪힌 자리에서 튀는 토마토 과육 조각 */
+.fx-splat-drop {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: #e6392b;
+  transform: translate(0, 0) scale(1);
+  opacity: 1;
+  animation: splat-drop 0.5s ease-out forwards;
+}
+
+@keyframes splat-drop {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--sx), var(--sy)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 박수: 색종이(컨페티) 애니메이션 */
+.fx-confetti {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  animation-name: confetti-fall;
+  animation-timing-function: cubic-bezier(0.4, 0.2, 0.6, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(320px) rotate(600deg);
+    opacity: 0;
+  }
+}
+
+/* 하트: 하트가 위로 떠오르는 애니메이션 */
+.fx-heart {
+  position: absolute;
+  bottom: 10px;
+  font-size: 30px;
+  animation-name: heart-float;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes heart-float {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-30px) translateX(0) scale(1);
+  }
+  100% {
+    transform: translateY(-280px) translateX(var(--drift, 20px)) scale(0.85);
+    opacity: 0;
+  }
+}
+
+/* ===================== 반응형 (좁은 화면에서는 세로 스택) ===================== */
+@media (max-width: 900px) {
+  .theater-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .screen-wrapper {
+    min-height: 260px;
+  }
+
+  .chat-panel {
+    min-height: 320px;
+  }
+}

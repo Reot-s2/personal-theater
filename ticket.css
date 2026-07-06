@@ -1,0 +1,879 @@
+/* ===================== 티켓 메이커 페이지 전용 스타일 ===================== */
+/* 공통 색상/리셋은 style.css의 :root 변수와 기본 규칙을 재사용한다. */
+
+/* 티켓 메이커만 포인트 컬러를 빨강 대신 블루 계열로 교체한다.
+   (style.css의 :root보다 나중에 로드되므로 이 페이지 안에서만 덮어써지고,
+   퍼스널 시어터 쪽 --accent(빨강)에는 영향이 없다.) */
+:root {
+  --accent: #4682b4;
+  --accent-hover: #4f8ec2;
+}
+
+/* ---------- 추가 웹폰트 (상업적 이용 가능, noonnu.cc 배포) ---------- */
+@font-face {
+  font-family: "Pretendard";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cafe24MeongiBlack";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2405-3@1.1/Cafe24Meongi-B-v1.0.woff2") format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DnfBitbeatV2";
+  src: url("https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "OngleipParkDahyeon";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2") format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.back-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.back-nav-link:hover {
+  background: #26262f;
+  border-color: #3a3a46;
+}
+
+.page-title {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ---------- 전체 레이아웃 (좌: 템플릿/레이어, 중: 캔버스, 우: 텍스트 입력) ---------- */
+.ticket-maker {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr 280px;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+}
+
+.tm-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.tm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tm-section[hidden] {
+  display: none;
+}
+
+.tm-section-grow {
+  flex: 1;
+  min-height: 0;
+}
+
+.tm-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* ---------- 템플릿 목록 ---------- */
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.template-item:hover {
+  border-color: #3a3a46;
+}
+
+.template-item.active {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.template-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.template-icon::before {
+  content: "";
+  display: block;
+  border: 2px solid var(--text-secondary);
+  border-radius: 3px;
+  background: transparent;
+}
+
+.template-item.active .template-icon::before {
+  border-color: var(--accent);
+}
+
+.template-icon-portrait::before {
+  width: 12px;
+  height: 18px;
+}
+
+.template-icon-landscape::before {
+  width: 18px;
+  height: 12px;
+}
+
+.template-icon-square::before {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- 면 선택 토글 ---------- */
+.side-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+/* [hidden]은 UA 기본 스타일이라 위의 author 규칙(display:flex)에 밀리므로 명시적으로 덮어써야 한다. */
+.side-toggle[hidden] {
+  display: none;
+}
+
+.side-btn {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 9px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.side-btn:hover {
+  border-color: #3a3a46;
+}
+
+.side-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ---------- 레이어 목록 ---------- */
+.add-image-btn {
+  background: var(--bg-input);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.add-image-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.layer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.layer-item.selected {
+  border-color: var(--accent);
+}
+
+.layer-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+
+.layer-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.layer-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.layer-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.layer-btn.danger:hover {
+  background: rgba(255, 77, 103, 0.15);
+  color: var(--accent);
+}
+
+.layer-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ---------- 선택한 이미지 효과 ---------- */
+.tm-subheading {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.layer-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.layer-effects[hidden] {
+  display: none;
+}
+
+.effect-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.effect-checkbox-row input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.effect-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.effect-row label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.effect-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.effect-row select {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+/* ---------- 캔버스 영역 ---------- */
+.tm-canvas-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tm-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: #1c1c22;
+  background-image: linear-gradient(45deg, #2a2a33 25%, transparent 25%),
+    linear-gradient(-45deg, #2a2a33 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2a2a33 75%),
+    linear-gradient(-45deg, transparent 75%, #2a2a33 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+}
+
+/* 여백을 포함한 캔버스가 래퍼 크기에 맞춰 계산되므로 보통 딱 맞지만,
+   화면이 아주 작을 때를 대비해 넘치지 않도록 최대 크기를 제한한다(스크롤 방지). */
+#ticketCanvas {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  cursor: default;
+}
+
+.tm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.tm-btn {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.tm-btn:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  border-color: #3a3a46;
+}
+
+.tm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tm-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.tm-btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* ---------- 전체 텍스트 색상 일괄 변경 ---------- */
+.bulk-color-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.bulk-color-row > label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.bulk-color-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.bulk-color-controls input[type="color"] {
+  width: 40px;
+  height: 32px;
+  padding: 2px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.bulk-color-controls button {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.bulk-color-controls button:hover {
+  background: var(--accent-hover);
+}
+
+.date-auto-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.date-auto-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.divider-visible-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.divider-visible-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.field-stroke-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-stroke-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.field-stroke-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.field-gradient-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-gradient-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.field-gradient-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.field-gradient-colors {
+  display: flex;
+  gap: 6px;
+}
+
+.field-align-vertical-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-align-group {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.field-align-btn {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.field-align-btn:hover {
+  border-color: #3a3a46;
+}
+
+.field-align-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.field-vertical-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.field-vertical-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.bg-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bg-color-row .field-reset-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.field-card-body textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- 텍스트 입력 패널 ---------- */
+.tm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+  transition: opacity 0.15s ease;
+}
+
+.field-card.field-disabled {
+  opacity: 0.5;
+}
+
+.field-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.field-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-toggle input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.field-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.field-reset-btn,
+.field-remove-btn {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.field-reset-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+}
+
+.field-remove-btn:hover {
+  background: rgba(255, 77, 103, 0.15);
+  color: var(--accent);
+}
+
+.field-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-card-body textarea {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 9px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+}
+
+.field-card-body textarea:focus {
+  border-color: var(--accent);
+}
+
+.field-style-row {
+  display: flex;
+  gap: 6px;
+}
+
+.field-font-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 6px;
+  color: var(--text-primary);
+  font-size: 11px;
+  outline: none;
+}
+
+.field-font-select:focus {
+  border-color: var(--accent);
+}
+
+.field-size-input {
+  width: 46px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+}
+
+.field-size-input:focus {
+  border-color: var(--accent);
+}
+
+.field-color-input {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 2px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rating-input {
+  display: flex;
+  gap: 4px;
+}
+
+.rating-star-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--accent-gold);
+  line-height: 1;
+  padding: 2px;
+}
+
+.add-text-btn {
+  background: var(--bg-input);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.add-text-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+/* ---------- 캔버스 위 텍스트 더블클릭 인라인 편집 ----------
+   실제 입력/한글 조합(IME)만 담당하는 화면 밖 input. 화면에는 보이지 않고,
+   캔버스에 실제 값과 깜빡이는 커서를 직접 그려서 자연스럽게 수정되는 것처럼 보인다. */
+.inline-text-capture {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: none;
+  padding: 0;
+}
+
+/* ---------- 반응형 ---------- */
+@media (max-width: 1100px) {
+  .ticket-maker {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .tm-panel {
+    max-height: 320px;
+  }
+}

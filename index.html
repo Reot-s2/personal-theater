@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>퍼스널 시어터</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="logo">🎬 퍼스널 시어터</span>
+      </div>
+      <div class="topbar-right">
+        <a class="ticket-nav-link" href="ticket.html">🎟 티켓 만들기</a>
+        <span class="live-badge">LIVE</span>
+        <span class="viewer-count" id="viewerCount">1명 시청 중</span>
+      </div>
+    </header>
+
+    <main class="theater-layout">
+      <section class="screen-section">
+        <div class="screen-wrapper" id="screenWrapper">
+          <div class="screen-placeholder" id="screenPlaceholder">
+            <p class="placeholder-icon">🖥️</p>
+            <p>화면 공유 대기 중...</p>
+            <button type="button" class="share-start-btn" id="shareStartBtn">화면 공유 시작</button>
+          </div>
+          <video class="screen-video" id="screenVideo" autoplay playsinline muted></video>
+          <button type="button" class="share-stop-btn" id="shareStopBtn">⏹ 공유 중지</button>
+          <button type="button" class="unmute-btn" id="unmuteBtn" hidden>🔇 소리 켜기</button>
+          <!-- 리액션 애니메이션이 재생되는 오버레이 -->
+          <div class="reaction-stage" id="reactionStage" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <aside class="chat-panel">
+        <div class="chat-header">
+          <span>실시간 채팅</span>
+          <div class="chat-header-actions">
+            <button class="icon-btn" id="backupTrigger" type="button" title="채팅 로그 백업">💾</button>
+            <button class="profile-trigger" id="profileTrigger" type="button">
+              <span class="msg-avatar" id="myAvatarPreview"></span>
+              <span class="profile-name" id="myNamePreview"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="backup-menu" id="backupMenu" hidden>
+          <button type="button" id="backupTxtBtn">텍스트로 저장 (.txt)</button>
+          <button type="button" id="backupHtmlBtn">HTML로 저장 (.html)</button>
+        </div>
+
+        <div class="profile-menu" id="profileMenu" hidden>
+          <div class="profile-menu-row">
+            <label for="nameInput">닉네임</label>
+            <input type="text" id="nameInput" maxlength="12" placeholder="닉네임 입력" autocomplete="off" />
+          </div>
+          <div class="profile-menu-row">
+            <label for="colorInput">닉네임 색상</label>
+            <input type="color" id="colorInput" />
+          </div>
+          <div class="profile-menu-row">
+            <label>프로필 사진</label>
+            <div class="avatar-upload-row">
+              <span class="msg-avatar avatar-preview-lg" id="avatarPreviewLg"></span>
+              <label class="avatar-upload-btn" for="avatarUpload">이미지 업로드</label>
+              <input type="file" id="avatarUpload" accept="image/*" hidden />
+              <button type="button" class="avatar-remove-btn" id="avatarRemoveBtn">제거</button>
+            </div>
+          </div>
+          <div class="profile-menu-actions">
+            <button type="button" id="profileCloseBtn">완료</button>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="reaction-bar">
+          <button class="reaction-btn" data-type="boo" id="btnBoo" type="button">
+            <span class="reaction-icon">🍅</span>
+            <span class="reaction-label">야유</span>
+            <span class="reaction-count" id="countBoo">0</span>
+          </button>
+          <button class="reaction-btn" data-type="clap" id="btnClap" type="button">
+            <span class="reaction-icon">🎉</span>
+            <span class="reaction-label">박수</span>
+            <span class="reaction-count" id="countClap">0</span>
+          </button>
+          <button class="reaction-btn" data-type="heart" id="btnHeart" type="button">
+            <span class="reaction-icon">❤️</span>
+            <span class="reaction-label">하트</span>
+            <span class="reaction-count" id="countHeart">0</span>
+          </button>
+        </div>
+
+        <form class="chat-input-area" id="chatForm">
+          <input
+            type="text"
+            id="chatInput"
+            placeholder="메시지를 입력하세요"
+            autocomplete="off"
+            maxlength="200"
+          />
+          <button type="submit" id="chatSendBtn">전송</button>
+        </form>
+      </aside>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

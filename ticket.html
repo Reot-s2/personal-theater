@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>영화 티켓 만들기 / beta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Dancing+Script:wght@700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="ticket.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <a class="logo-link" href="index.html"><span class="logo">🎬 퍼스널 시어터</span></a>
+        <a class="back-nav-link" href="index.html">← 돌아가기</a>
+      </div>
+      <div class="topbar-right">
+        <span class="page-title">🎟 영화 티켓 만들기</span>
+      </div>
+    </header>
+
+    <main class="ticket-maker">
+      <aside class="tm-panel tm-panel-left">
+        <div class="tm-section">
+          <h2 class="tm-heading">템플릿</h2>
+          <div class="template-list" id="templateList"></div>
+        </div>
+
+        <div class="tm-section">
+          <h2 class="tm-heading">면 선택</h2>
+          <div class="side-toggle">
+            <button type="button" class="side-btn" data-side="front" id="sideFrontBtn">앞면</button>
+            <button type="button" class="side-btn" data-side="back" id="sideBackBtn">뒷면</button>
+          </div>
+        </div>
+
+        <div class="tm-section">
+          <h2 class="tm-heading">티켓 배경색</h2>
+          <div class="bg-color-row">
+            <input type="color" id="bgColorInput" class="field-color-input" title="배경색" />
+            <button type="button" class="field-reset-btn" id="bgColorResetBtn" title="기본색으로 되돌리기">⟲</button>
+          </div>
+        </div>
+
+        <div class="tm-section" id="dividerSection" hidden>
+          <h2 class="tm-heading">구분선</h2>
+          <label class="divider-visible-toggle">
+            <input type="checkbox" id="dividerVisibleCheckbox" checked />
+            <span>구분선 표시</span>
+          </label>
+          <div class="side-toggle" id="dividerOrientationWrap">
+            <button type="button" class="side-btn" data-orientation="horizontal" id="dividerHorizontalBtn">가로</button>
+            <button type="button" class="side-btn" data-orientation="vertical" id="dividerVerticalBtn">세로</button>
+          </div>
+        </div>
+
+        <div class="tm-section tm-section-grow">
+          <h2 class="tm-heading">레이어 목록</h2>
+          <button type="button" class="add-image-btn" id="addImageBtn">이미지 추가</button>
+          <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
+          <button type="button" class="add-image-btn" id="copyOtherSideBtn">🔁 반대 면 이미지 동기화</button>
+          <ul class="layer-list" id="layerList"></ul>
+            <div class="layer-effects" id="layerEffects" hidden>
+            <h3 class="tm-subheading">선택한 이미지 효과</h3>
+            <label class="effect-checkbox-row">
+              <input type="checkbox" id="effectGrayscale" />
+              <span>흑백 처리</span>
+            </label>
+            <div class="effect-row">
+              <label for="effectBlur">블러</label>
+              <input type="range" id="effectBlur" min="0" max="20" step="1" />
+            </div>
+            <div class="effect-row">
+              <label for="effectGradient">그라데이션</label>
+              <select id="effectGradient">
+                <option value="none">없음</option>
+                <option value="white-bottom">흰색 (아래→위로)</option>
+                <option value="white-top">흰색 (위→아래)</option>
+                <option value="black-bottom">검정 (아래→위)</option>
+                <option value="black-top">검정 (위→아래)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="tm-canvas-area">
+        <div class="tm-canvas-wrap">
+          <canvas id="ticketCanvas"></canvas>
+        </div>
+        <div class="tm-toolbar">
+          <button type="button" class="tm-btn" id="undoBtn" disabled title="실행취소 (Ctrl+Z)">↶ 실행취소</button>
+          <button type="button" class="tm-btn" id="redoBtn" disabled title="다시실행 (Ctrl+Shift+Z)">↷ 다시실행</button>
+          <button type="button" class="tm-btn" id="deleteLayerBtn" disabled>선택 항목 삭제</button>
+          <button type="button" class="tm-btn tm-btn-primary" id="exportSideBtn">현재 면 PNG 저장</button>
+          <button type="button" class="tm-btn tm-btn-primary" id="exportBothBtn">앞뒤 모두 저장</button>
+          <button type="button" class="tm-btn tm-btn-primary" id="exportCombinedBtn">앞뒤 합쳐서 저장</button>
+        </div>
+      </section>
+
+      <aside class="tm-panel tm-panel-right">
+        <h2 class="tm-heading" id="fieldsHeading">내용 입력</h2>
+
+        <div class="bulk-color-row">
+          <label for="bulkColorInput">전체 텍스트 색상 일괄 변경</label>
+          <div class="bulk-color-controls">
+            <input type="color" id="bulkColorInput" />
+            <button type="button" id="bulkColorApplyBtn">전체 적용</button>
+          </div>
+        </div>
+
+        <div class="tm-fields" id="fieldsContainer"></div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="ticket.js"></script>
+</body>
+</html>
