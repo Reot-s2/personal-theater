@@ -1,3 +1,11 @@
+/* Pretendard: 퍼스널 시어터/티켓 메이커 공용 기본 폰트 (상업적 이용 가능) */
+@font-face {
+  font-family: "Pretendard";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
 /* ===================== 기본 설정 / 다크 테마 변수 ===================== */
 :root {
   --bg-main: #0b0b0f;
@@ -7,8 +15,8 @@
   --border-color: #2a2a33;
   --text-primary: #f5f5f7;
   --text-secondary: #9a9aa5;
-  --accent: #ff4d67;
-  --accent-hover: #ff6b81;
+  --accent: #4682b4;
+  --accent-hover: #4f8ec2;
   --accent-gold: #ffcf5c;
   --confetti-colors: #ff4d67, #ffcf5c, #5cd6ff, #7dff8a, #c58cff;
 }
@@ -114,14 +122,37 @@ button {
   border-color: #3a3a46;
 }
 
-/* ---------- 메인 레이아웃 (좌 2.5 : 우 1) ---------- */
+/* ---------- 메인 레이아웃 (좌 2.5 : 우 1, 가운데 핸들로 채팅창 너비 조절 가능) ---------- */
 .theater-layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 2.5fr 1fr;
+  grid-template-columns: 2.5fr 6px 1fr;
   gap: 16px;
   padding: 16px;
   min-height: 0;
+}
+
+.chat-resize-handle {
+  width: 6px;
+  cursor: col-resize;
+  position: relative;
+}
+
+.chat-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--border-color);
+  transition: background 0.15s ease;
+}
+
+.chat-resize-handle:hover::after,
+.chat-resize-handle.dragging::after {
+  background: var(--accent);
 }
 
 /* ===================== 좌측 화면 공유 영역 ===================== */
@@ -236,7 +267,7 @@ button {
 }
 
 .share-stop-btn:hover {
-  background: rgba(255, 77, 103, 0.85);
+  background: rgba(70, 130, 180, 0.85);
 }
 
 .screen-wrapper.sharing .share-stop-btn {
@@ -272,7 +303,7 @@ button {
 }
 
 .unmute-btn:hover {
-  background: rgba(255, 77, 103, 0.85);
+  background: rgba(70, 130, 180, 0.85);
 }
 
 /* 리액션 애니메이션이 재생되는 화면 위 오버레이 */
@@ -650,21 +681,27 @@ button {
 
 /* 채팅 패널 안으로 옮겨진 리액션 버튼 바 */
 .chat-panel .reaction-bar {
-  padding: 10px;
+  padding: 8px 10px;
   border-top: 1px solid var(--border-color);
-  gap: 8px;
+  gap: 6px;
 }
 
 .chat-panel .reaction-btn {
-  flex-direction: column;
-  padding: 8px 4px;
-  gap: 3px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 4px;
+  gap: 4px;
   font-size: 11px;
   border-radius: 8px;
 }
 
 .chat-panel .reaction-icon {
-  font-size: 18px;
+  font-size: 14px;
+}
+
+.chat-panel .reaction-label {
+  display: none;
 }
 
 .chat-panel .reaction-count {
@@ -679,19 +716,23 @@ button {
   flex-shrink: 0;
 }
 
-.chat-input-area input {
+.chat-input-area textarea {
   flex: 1;
   min-width: 0;
+  min-height: 44px;
+  max-height: 160px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 11px 12px;
   color: var(--text-primary);
   font-size: 13px;
+  font-family: inherit;
   outline: none;
+  resize: vertical;
 }
 
-.chat-input-area input:focus {
+.chat-input-area textarea:focus {
   border-color: var(--accent);
 }
 
@@ -855,6 +896,10 @@ button {
     grid-template-rows: auto auto;
   }
 
+  .chat-resize-handle {
+    display: none;
+  }
+
   .screen-wrapper {
     min-height: 260px;
   }
@@ -862,4 +907,101 @@ button {
   .chat-panel {
     min-height: 320px;
   }
+}
+
+/* ===================== 프로필 사진 위치 조정(크롭) 모달 ===================== */
+.avatar-crop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 6, 8, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.avatar-crop-overlay[hidden] {
+  display: none;
+}
+
+.avatar-crop-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 300px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.avatar-crop-modal h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.avatar-crop-viewport {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
+  cursor: grab;
+  touch-action: none;
+}
+
+.avatar-crop-viewport.dragging {
+  cursor: grabbing;
+}
+
+.avatar-crop-viewport img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.avatar-crop-modal input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.avatar-crop-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.avatar-crop-actions button {
+  flex: 1;
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.avatar-crop-actions button:hover {
+  border-color: #3a3a46;
+  background: var(--bg-elevated);
+}
+
+#avatarCropApplyBtn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#avatarCropApplyBtn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }

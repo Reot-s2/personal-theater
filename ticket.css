@@ -11,13 +11,6 @@
 
 /* ---------- 추가 웹폰트 (상업적 이용 가능, noonnu.cc 배포) ---------- */
 @font-face {
-  font-family: "Pretendard";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Cafe24MeongiBlack";
   src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2405-3@1.1/Cafe24Meongi-B-v1.0.woff2") format("woff2");
   font-weight: normal;

@@ -42,6 +42,8 @@
         </div>
       </section>
 
+      <div class="chat-resize-handle" id="chatResizeHandle"></div>
+
       <aside class="chat-panel">
         <div class="chat-header">
           <span>실시간 채팅</span>
@@ -103,17 +105,31 @@
         </div>
 
         <form class="chat-input-area" id="chatForm">
-          <input
-            type="text"
+          <textarea
             id="chatInput"
             placeholder="메시지를 입력하세요"
             autocomplete="off"
             maxlength="200"
-          />
+            rows="1"
+          ></textarea>
           <button type="submit" id="chatSendBtn">전송</button>
         </form>
       </aside>
     </main>
+  </div>
+
+  <div class="avatar-crop-overlay" id="avatarCropOverlay" hidden>
+    <div class="avatar-crop-modal">
+      <h3>프로필 사진 위치 조정</h3>
+      <div class="avatar-crop-viewport" id="avatarCropViewport">
+        <img id="avatarCropImage" alt="" draggable="false" />
+      </div>
+      <input type="range" id="avatarCropZoom" min="1" max="3" step="0.01" value="1" />
+      <div class="avatar-crop-actions">
+        <button type="button" id="avatarCropCancelBtn">취소</button>
+        <button type="button" id="avatarCropApplyBtn">적용</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>

@@ -207,6 +207,15 @@ chatForm.addEventListener("submit", (e) => {
   chatInput.value = "";
 });
 
+// textarea로 바뀌면서 Enter가 기본적으로 줄바꿈이 되므로, Enter만 누르면 전송하고
+// Shift+Enter는 그대로 줄바꿈으로 남겨둔다.
+chatInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    chatForm.requestSubmit();
+  }
+});
+
 // 연결이 실제로 준비된 뒤(로컬 모드에서도 open은 항상 한 번 발생한다) 입장을 알린다.
 TheaterSocket.on("open", () => {
   TheaterSocket.send("presence", { type: "join", name: me.name });
@@ -247,14 +256,11 @@ colorInput.addEventListener("input", () => {
 
 avatarUpload.addEventListener("change", () => {
   const file = avatarUpload.files && avatarUpload.files[0];
+  avatarUpload.value = ""; // 같은 파일을 다시 골라도 change가 또 발생하도록 비워둔다.
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = () => {
-    me.avatar = reader.result;
-    localStorage.setItem("theater_avatar", reader.result);
-    refreshProfilePreview();
-  };
+  reader.onload = () => openAvatarCropModal(reader.result);
   reader.readAsDataURL(file);
 });
 
@@ -263,6 +269,132 @@ avatarRemoveBtn.addEventListener("click", () => {
   localStorage.removeItem("theater_avatar");
   avatarUpload.value = "";
   refreshProfilePreview();
+});
+
+/* ---------- 프로필 사진 위치 조정(크롭) ----------
+   원본 사진을 그대로 원형 아바타에 욱여넣으면 얼굴이 찌그러지거나 엉뚱한 부분이
+   잘릴 수 있어서, 업로드 직후 드래그로 위치를 옮기고 슬라이더로 확대해서
+   원하는 부분만 골라 저장할 수 있게 한다. */
+const avatarCropOverlay = document.getElementById("avatarCropOverlay");
+const avatarCropViewport = document.getElementById("avatarCropViewport");
+const avatarCropImage = document.getElementById("avatarCropImage");
+const avatarCropZoom = document.getElementById("avatarCropZoom");
+const avatarCropCancelBtn = document.getElementById("avatarCropCancelBtn");
+const avatarCropApplyBtn = document.getElementById("avatarCropApplyBtn");
+
+const AVATAR_CROP_VIEWPORT_SIZE = 220;
+const AVATAR_OUTPUT_SIZE = 320;
+
+// { naturalWidth, naturalHeight, baseScale(뷰포트를 꽉 채우는 최소 배율), zoom, offsetX, offsetY }
+let avatarCropState = null;
+
+function updateAvatarCropTransform() {
+  const { naturalWidth, naturalHeight, baseScale, zoom, offsetX, offsetY } = avatarCropState;
+  const scale = baseScale * zoom;
+  avatarCropImage.style.width = `${naturalWidth * scale}px`;
+  avatarCropImage.style.height = `${naturalHeight * scale}px`;
+  avatarCropImage.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+}
+
+// 사진이 원형 뷰포트를 항상 완전히 덮도록(빈 공간이 생기지 않도록) 이동 범위를 제한한다.
+function clampAvatarCropOffset() {
+  const { naturalWidth, naturalHeight, baseScale, zoom } = avatarCropState;
+  const scale = baseScale * zoom;
+  const displayedW = naturalWidth * scale;
+  const displayedH = naturalHeight * scale;
+  const minX = AVATAR_CROP_VIEWPORT_SIZE - displayedW;
+  const minY = AVATAR_CROP_VIEWPORT_SIZE - displayedH;
+  avatarCropState.offsetX = Math.min(0, Math.max(minX, avatarCropState.offsetX));
+  avatarCropState.offsetY = Math.min(0, Math.max(minY, avatarCropState.offsetY));
+}
+
+function openAvatarCropModal(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    const baseScale = Math.max(
+      AVATAR_CROP_VIEWPORT_SIZE / img.naturalWidth,
+      AVATAR_CROP_VIEWPORT_SIZE / img.naturalHeight
+    );
+    avatarCropState = {
+      naturalWidth: img.naturalWidth,
+      naturalHeight: img.naturalHeight,
+      baseScale,
+      zoom: 1,
+      offsetX: (AVATAR_CROP_VIEWPORT_SIZE - img.naturalWidth * baseScale) / 2,
+      offsetY: (AVATAR_CROP_VIEWPORT_SIZE - img.naturalHeight * baseScale) / 2,
+    };
+    avatarCropImage.src = dataUrl;
+    avatarCropZoom.value = "1";
+    updateAvatarCropTransform();
+    avatarCropOverlay.hidden = false;
+  };
+  img.src = dataUrl;
+}
+
+function closeAvatarCropModal() {
+  avatarCropOverlay.hidden = true;
+  avatarCropState = null;
+}
+
+let avatarDragStart = null;
+
+avatarCropViewport.addEventListener("pointerdown", (e) => {
+  if (!avatarCropState) return;
+  avatarDragStart = { x: e.clientX, y: e.clientY, offsetX: avatarCropState.offsetX, offsetY: avatarCropState.offsetY };
+  avatarCropViewport.classList.add("dragging");
+  avatarCropViewport.setPointerCapture(e.pointerId);
+});
+
+avatarCropViewport.addEventListener("pointermove", (e) => {
+  if (!avatarDragStart) return;
+  avatarCropState.offsetX = avatarDragStart.offsetX + (e.clientX - avatarDragStart.x);
+  avatarCropState.offsetY = avatarDragStart.offsetY + (e.clientY - avatarDragStart.y);
+  clampAvatarCropOffset();
+  updateAvatarCropTransform();
+});
+
+function stopAvatarDrag() {
+  avatarDragStart = null;
+  avatarCropViewport.classList.remove("dragging");
+}
+
+avatarCropViewport.addEventListener("pointerup", stopAvatarDrag);
+avatarCropViewport.addEventListener("pointercancel", stopAvatarDrag);
+
+avatarCropZoom.addEventListener("input", () => {
+  if (!avatarCropState) return;
+  avatarCropState.zoom = Number(avatarCropZoom.value);
+  clampAvatarCropOffset();
+  updateAvatarCropTransform();
+});
+
+avatarCropCancelBtn.addEventListener("click", closeAvatarCropModal);
+
+avatarCropOverlay.addEventListener("click", (e) => {
+  if (e.target === avatarCropOverlay) closeAvatarCropModal();
+});
+
+avatarCropApplyBtn.addEventListener("click", () => {
+  if (!avatarCropState) return;
+  const { baseScale, zoom, offsetX, offsetY } = avatarCropState;
+  const scale = baseScale * zoom;
+
+  // 원형 뷰포트가 원본 사진 좌표계에서 어디에 해당하는지 역산해서 그 영역만 잘라낸다.
+  const sx = -offsetX / scale;
+  const sy = -offsetY / scale;
+  const sSize = AVATAR_CROP_VIEWPORT_SIZE / scale;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = AVATAR_OUTPUT_SIZE;
+  canvas.height = AVATAR_OUTPUT_SIZE;
+  canvas.getContext("2d").drawImage(avatarCropImage, sx, sy, sSize, sSize, 0, 0, AVATAR_OUTPUT_SIZE, AVATAR_OUTPUT_SIZE);
+
+  const croppedDataUrl = canvas.toDataURL("image/png");
+  me.avatar = croppedDataUrl;
+  localStorage.setItem("theater_avatar", croppedDataUrl);
+  refreshProfilePreview();
+
+  closeAvatarCropModal();
 });
 
 function openProfileMenu() {
@@ -820,6 +952,65 @@ shareStopBtn.addEventListener("click", stopScreenShare);
 unmuteBtn.addEventListener("click", () => {
   screenVideo.muted = false;
   unmuteBtn.hidden = true;
+});
+
+/* =====================================================================
+   채팅창 너비 조절 (드래그)
+   ===================================================================== */
+const theaterLayout = document.querySelector(".theater-layout");
+const chatResizeHandle = document.getElementById("chatResizeHandle");
+const chatPanelEl = document.querySelector(".chat-panel");
+
+const CHAT_WIDTH_MIN = 260; // 채팅이 안 보일 정도로 쭈그러들지 않게 하는 최소 너비
+const CHAT_WIDTH_MAX = 640;
+
+// 반응형(좁은 화면) 구간에서는 세로 스택 레이아웃을 그대로 써야 하므로 너비를 강제하지 않는다.
+function isDesktopLayout() {
+  return window.matchMedia("(min-width: 901px)").matches;
+}
+
+function applyChatWidth(px) {
+  theaterLayout.style.gridTemplateColumns = `1fr 6px ${px}px`;
+}
+
+function syncChatWidthForViewport() {
+  if (!isDesktopLayout()) {
+    theaterLayout.style.gridTemplateColumns = "";
+    return;
+  }
+  const saved = parseInt(localStorage.getItem("theater_chat_width"), 10);
+  if (!Number.isNaN(saved)) applyChatWidth(saved);
+}
+
+syncChatWidthForViewport();
+window.addEventListener("resize", syncChatWidthForViewport);
+
+let resizingChat = false;
+
+chatResizeHandle.addEventListener("mousedown", (e) => {
+  if (!isDesktopLayout()) return;
+  resizingChat = true;
+  chatResizeHandle.classList.add("dragging");
+  document.body.style.userSelect = "none";
+  e.preventDefault();
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!resizingChat) return;
+  const containerRect = theaterLayout.getBoundingClientRect();
+  const maxAllowed = Math.min(CHAT_WIDTH_MAX, containerRect.width * 0.6);
+  let newWidth = containerRect.right - e.clientX;
+  newWidth = Math.min(maxAllowed, Math.max(CHAT_WIDTH_MIN, newWidth));
+  applyChatWidth(newWidth);
+});
+
+window.addEventListener("mouseup", () => {
+  if (!resizingChat) return;
+  resizingChat = false;
+  chatResizeHandle.classList.remove("dragging");
+  document.body.style.userSelect = "";
+  const chatWidthPx = Math.round(chatPanelEl.getBoundingClientRect().width);
+  localStorage.setItem("theater_chat_width", chatWidthPx);
 });
 
 /* =====================================================================
