@@ -829,7 +829,8 @@ button {
   position: absolute;
   left: 0;
   top: 0;
-  font-size: 36px;
+  width: 36px;
+  height: 36px;
   transform: translate(0, 0) scale(0.4);
   animation-name: tomato-throw;
   animation-timing-function: cubic-bezier(0.25, 0.55, 0.4, 1);

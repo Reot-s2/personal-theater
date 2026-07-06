@@ -698,6 +698,14 @@ const reactionButtons = {
   heart: document.getElementById("btnHeart"),
 };
 
+// 이모지(🍅)는 보는 사람 기기의 이모지 폰트에 따라 모양이 제각각이라, 누가 봐도
+// 똑같이 보이도록 직접 그린 SVG를 쓴다.
+const TOMATO_SVG = `<svg viewBox="0 0 24 24" style="width:100%;height:100%;display:block;" aria-hidden="true">
+  <circle cx="12" cy="13.5" r="9" fill="#e6432f"></circle>
+  <ellipse cx="8.3" cy="9.8" rx="2.6" ry="1.6" fill="#ff8a72" opacity="0.65"></ellipse>
+  <polygon points="12,3 13.8,7.2 18.3,7.2 14.7,9.8 16,14 12,11.3 8,14 9.3,9.8 5.7,7.2 10.2,7.2" fill="#3fa34d"></polygon>
+</svg>`;
+
 function spawnSplat(x, y) {
   const mark = document.createElement("span");
   mark.className = "fx-splat-mark";
@@ -764,7 +772,7 @@ function spawnTomato() {
 
   const el = document.createElement("span");
   el.className = "fx-tomato";
-  el.textContent = "🍅";
+  el.innerHTML = TOMATO_SVG;
   el.style.left = `${startX}px`;
   el.style.top = `${startY}px`;
   el.style.setProperty("--dx", `${dx}px`);
