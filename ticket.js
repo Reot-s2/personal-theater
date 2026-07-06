@@ -2198,6 +2198,13 @@ function removeCustomTextItem(id) {
 /* =====================================================================
    PNG 내보내기 (배경 투명)
    ===================================================================== */
+// 저장 파일명에 쓸 날짜(YYMMDD). 템플릿 이름 대신 간단하게 날짜만 붙인다.
+function formatTicketFileDate() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getFullYear() % 100)}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+}
+
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -2238,7 +2245,7 @@ function exportCanvasToBlob(onSuccess) {
 exportSideBtn.addEventListener("click", () => {
   renderCanvas({ forExport: true });
   exportCanvasToBlob((blob) => {
-    downloadBlob(blob, `ticket-${state.activeTemplateId}-${state.activeSide}.png`);
+    downloadBlob(blob, `ticket_${formatTicketFileDate()}.png`);
     renderCanvas();
   });
 });
@@ -2250,7 +2257,7 @@ exportBothBtn.addEventListener("click", async () => {
     renderCanvas({ forExport: true });
     await new Promise((resolve) => {
       exportCanvasToBlob((blob) => {
-        downloadBlob(blob, `ticket-${state.activeTemplateId}-${side}.png`);
+        downloadBlob(blob, `ticket_${formatTicketFileDate()}.png`);
         resolve();
       });
       // exportCanvasToBlob이 실패 알림만 띄우고 끝나는 경우에도 다음 단계로 진행되도록
@@ -2305,7 +2312,7 @@ exportCombinedBtn.addEventListener("click", () => {
         );
         return;
       }
-      downloadBlob(blob, `ticket-${state.activeTemplateId}-combined.png`);
+      downloadBlob(blob, `ticket_${formatTicketFileDate()}.png`);
     }, "image/png");
   } catch (err) {
     console.error(err);

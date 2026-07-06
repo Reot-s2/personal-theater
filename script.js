@@ -583,14 +583,6 @@ const reactionButtons = {
   heart: document.getElementById("btnHeart"),
 };
 
-const reactionCounts = {
-  boo: document.getElementById("countBoo"),
-  clap: document.getElementById("countClap"),
-  heart: document.getElementById("countHeart"),
-};
-
-const counts = { boo: 0, clap: 0, heart: 0 };
-
 function spawnSplat(x, y) {
   const mark = document.createElement("span");
   mark.className = "fx-splat-mark";
@@ -695,21 +687,44 @@ function playReactionEffect(type) {
   btn.classList.add("pulse");
 }
 
-function bumpReactionCount(type) {
-  counts[type] += 1;
-  reactionCounts[type].textContent = counts[type];
-}
-
-// 서버(혹은 로컬 에코)로부터 리액션 이벤트를 받으면 애니메이션 + 카운트를 갱신한다.
+// 서버(혹은 로컬 에코)로부터 리액션 이벤트를 받으면 애니메이션을 재생한다.
 TheaterSocket.on("reaction", ({ type }) => {
   playReactionEffect(type);
-  bumpReactionCount(type);
 });
 
 Object.entries(reactionButtons).forEach(([type, btn]) => {
   btn.addEventListener("click", () => {
     TheaterSocket.send("reaction", { type });
   });
+});
+
+/* ---------- 이모티콘 패널 트리거 ----------
+   실제 이모티콘 목록/버튼은 따로 채워 넣을 예정이라 여기서는 열고 닫는 동작만
+   준비해 둔다. 프로필/백업 메뉴와 똑같은 "토글 + 바깥 클릭하면 닫기" 패턴이라
+   그대로 재사용했다. */
+const emojiPanelBtn = document.getElementById("emojiPanelBtn");
+const emojiPanel = document.getElementById("emojiPanel");
+
+function openEmojiPanel() {
+  closeProfileMenu();
+  closeBackupMenu();
+  emojiPanel.hidden = false;
+}
+
+function closeEmojiPanel() {
+  emojiPanel.hidden = true;
+}
+
+emojiPanelBtn.addEventListener("click", () => {
+  if (emojiPanel.hidden) openEmojiPanel();
+  else closeEmojiPanel();
+});
+
+document.addEventListener("click", (e) => {
+  if (emojiPanel.hidden) return;
+  const clickedInsidePanel = emojiPanel.contains(e.target);
+  const clickedTrigger = emojiPanelBtn.contains(e.target);
+  if (!clickedInsidePanel && !clickedTrigger) closeEmojiPanel();
 });
 
 /* =====================================================================

@@ -319,6 +319,7 @@ button {
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+  position: relative; /* 이모티콘 패널 위치의 기준 */
 }
 
 .reaction-btn {
@@ -340,8 +341,7 @@ button {
 }
 
 .reaction-icon,
-.reaction-label,
-.reaction-count {
+.reaction-label {
   white-space: nowrap;
 }
 
@@ -360,13 +360,6 @@ button {
 
 .reaction-icon {
   font-size: 18px;
-}
-
-.reaction-count {
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 13px;
-  min-width: 14px;
 }
 
 @keyframes btn-pulse {
@@ -704,8 +697,24 @@ button {
   display: none;
 }
 
-.chat-panel .reaction-count {
-  font-size: 11px;
+/* ---------- 이모티콘 패널 (Win+. 처럼 트리거 버튼 위에 떠서 나타남) ---------- */
+.emoji-panel {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.emoji-panel[hidden] {
+  display: none;
 }
 
 .chat-input-area {
