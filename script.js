@@ -669,12 +669,28 @@ function closePeerConnection(peerId) {
   }
 }
 
+// 브라우저의 기본 자동 대역폭 추정치는 꽤 보수적이어서(특히 P2P 환경에서), 움직임이
+// 많은 화면(직캠, 게임 등)에서 화질이 뭉개지거나 프레임이 밀리는 원인이 된다.
+// 화질 상한을 명시적으로 올려서 인코더가 더 여유 있게 비트를 쓰도록 한다.
+const SCREEN_SHARE_MAX_BITRATE = 4_000_000; // 시청자 1명당 최대 약 4Mbps
+
+function boostVideoBitrate(pc) {
+  pc.getSenders().forEach((sender) => {
+    if (!sender.track || sender.track.kind !== "video") return;
+    const params = sender.getParameters();
+    if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
+    params.encodings[0].maxBitrate = SCREEN_SHARE_MAX_BITRATE;
+    sender.setParameters(params).catch(() => {});
+  });
+}
+
 // 지금 내가 공유 중인 화면을 특정 상대방에게 새로 연결해서 보내준다.
 // (공유를 막 시작했을 때 이미 있던 사람들에게, 또는 공유 도중 새로 들어온 사람에게 쓴다.)
 async function offerScreenShareTo(peerId) {
   if (!screenStream) return;
   const pc = getOrCreatePeerConnection(peerId);
   screenStream.getTracks().forEach((track) => pc.addTrack(track, screenStream));
+  boostVideoBitrate(pc);
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   TheaterSocket.send("rtc-offer", { to: peerId, sdp: offer });
@@ -743,6 +759,11 @@ async function startScreenShare() {
     });
     screenStream = stream;
     attachScreenStream(stream, { local: true });
+
+    // 인코더에게 "화질보다 움직임(프레임)이 중요한 영상"이라는 힌트를 줘서,
+    // 직캠·게임처럼 움직임이 많은 화면에서 프레임이 밀리지 않게 한다.
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack) videoTrack.contentHint = "motion";
 
     // 브라우저가 기본 제공하는 "공유 중지" 버튼(주소창 옆 등)을 눌러도
     // 감지할 수 있도록 트랙 종료 이벤트를 듣는다.
