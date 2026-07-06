@@ -781,9 +781,11 @@ unmuteBtn.addEventListener("click", () => {
 /* =====================================================================
    초기화
    ===================================================================== */
-// 시그널링 서버(server.js) 주소. 같은 기기/네트워크에서 테스트할 땐 이 기본값이면 되고,
-// 지인들과 다른 네트워크에서 쓰려면 서버를 배포한 뒤 그 주소로 바꾸면 된다.
-// 서버가 꺼져 있거나 연결에 실패해도 자동으로 로컬 모드로 전환되니, 아직
-// server.js를 안 띄웠어도 혼자 쓰는 건 지장 없다.
-const SIGNALING_SERVER_URL = `ws://${location.hostname || "localhost"}:8080`;
+// 시그널링 서버 주소. Render 무료 플랜에 배포해 둔 서버를 기본으로 쓰고,
+// localhost에서 개발/테스트할 때만 로컬의 server.js(포트 8080)로 붙는다.
+// 서버가 꺼져 있거나 연결에 실패해도 자동으로 로컬 모드로 전환되니, 배포 서버가
+// 잠들어 있거나(무료 플랜 슬립) 아직 안 켜져 있어도 혼자 쓰는 건 지장 없다.
+const DEPLOYED_SIGNALING_URL = "wss://personal-theater-signaling.onrender.com";
+const isLocalDev = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const SIGNALING_SERVER_URL = isLocalDev ? `ws://${location.hostname}:8080` : DEPLOYED_SIGNALING_URL;
 TheaterSocket.connect(SIGNALING_SERVER_URL);
