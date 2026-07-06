@@ -237,7 +237,18 @@ const chatAttachmentRemoveBtn = document.getElementById("chatAttachmentRemoveBtn
 const CHAT_IMAGE_MAX_DIMENSION = 640;
 let pendingChatImage = null; // 전송 대기 중인 이미지(리사이즈된 data URL)
 
+// 알파 채널에 255보다 작은(완전 불투명하지 않은) 픽셀이 하나라도 있으면 투명도가 있는 것으로 본다.
+function canvasHasTransparency(ctx, w, h) {
+  const { data } = ctx.getImageData(0, 0, w, h);
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 255) return true;
+  }
+  return false;
+}
+
 // 원본 이미지를 적당한 크기로 줄여서(용량 절약) data URL로 변환한다.
+// 투명한 픽셀이 실제로 있는 이미지(티켓, 스티커 등)만 PNG로 저장해 투명도를 지키고,
+// 그 외 일반 사진은 용량이 훨씬 작은 JPEG로 저장한다.
 function resizeImageFile(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -250,8 +261,11 @@ function resizeImageFile(file) {
         const canvas = document.createElement("canvas");
         canvas.width = w;
         canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.8));
+        const canvasCtx = canvas.getContext("2d");
+        canvasCtx.drawImage(img, 0, 0, w, h);
+
+        const hasTransparency = canvasHasTransparency(canvasCtx, w, h);
+        resolve(hasTransparency ? canvas.toDataURL("image/png") : canvas.toDataURL("image/jpeg", 0.8));
       };
       img.src = reader.result;
     };
