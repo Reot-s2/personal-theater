@@ -595,6 +595,32 @@ const shareStopBtn = document.getElementById("shareStopBtn");
 const screenVideo = document.getElementById("screenVideo");
 const unmuteBtn = document.getElementById("unmuteBtn");
 const viewerCountEl = document.getElementById("viewerCount");
+const shareQualitySelect = document.getElementById("shareQualitySelect");
+
+// 브라우저의 기본 자동 대역폭 추정치는 꽤 보수적이어서(특히 P2P 환경에서), 움직임이
+// 많은 화면(직캠, 게임 등)에서 화질이 뭉개지거나 프레임이 밀리는 원인이 된다.
+// - 표준: 일반적인 가정용 업로드 속도로도 무난한 값.
+// - 고화질: 프레임/비트레이트를 크게 올리므로, 업로드 속도가 넉넉한 사람(기가 인터넷 등)에게 추천.
+//   (시청자 수만큼 업로드가 곱해지는 구조라, 시청자가 많을수록 부담이 커진다.)
+const SCREEN_SHARE_QUALITY_PRESETS = {
+  standard: {
+    video: { frameRate: { ideal: 24, max: 30 }, width: { max: 1920 }, height: { max: 1080 } },
+    maxBitrate: 4_000_000,
+  },
+  high: {
+    video: { frameRate: { ideal: 30, max: 60 }, width: { max: 1920 }, height: { max: 1080 } },
+    maxBitrate: 8_000_000,
+  },
+};
+
+shareQualitySelect.value = localStorage.getItem("theater_share_quality") || "standard";
+shareQualitySelect.addEventListener("change", () => {
+  localStorage.setItem("theater_share_quality", shareQualitySelect.value);
+});
+
+function getSelectedQualityPreset() {
+  return SCREEN_SHARE_QUALITY_PRESETS[shareQualitySelect.value] || SCREEN_SHARE_QUALITY_PRESETS.standard;
+}
 
 let screenStream = null;
 let myPeerId = null;
@@ -669,17 +695,13 @@ function closePeerConnection(peerId) {
   }
 }
 
-// 브라우저의 기본 자동 대역폭 추정치는 꽤 보수적이어서(특히 P2P 환경에서), 움직임이
-// 많은 화면(직캠, 게임 등)에서 화질이 뭉개지거나 프레임이 밀리는 원인이 된다.
-// 화질 상한을 명시적으로 올려서 인코더가 더 여유 있게 비트를 쓰도록 한다.
-const SCREEN_SHARE_MAX_BITRATE = 4_000_000; // 시청자 1명당 최대 약 4Mbps
-
 function boostVideoBitrate(pc) {
+  const preset = getSelectedQualityPreset();
   pc.getSenders().forEach((sender) => {
     if (!sender.track || sender.track.kind !== "video") return;
     const params = sender.getParameters();
     if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
-    params.encodings[0].maxBitrate = SCREEN_SHARE_MAX_BITRATE;
+    params.encodings[0].maxBitrate = preset.maxBitrate;
     sender.setParameters(params).catch(() => {});
   });
 }
@@ -752,9 +774,10 @@ async function startScreenShare() {
   }
 
   try {
-    // 시청자 수만큼 업로드 대역폭이 곱절로 나가는 P2P 구조라, 화질/프레임에 상한을 걸어둔다.
+    // 선택한 화질 프리셋(표준/고화질)에 따라 캡처 해상도·프레임 상한이 정해진다.
+    const preset = getSelectedQualityPreset();
     const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: { ideal: 24, max: 30 }, width: { max: 1920 }, height: { max: 1080 } },
+      video: preset.video,
       audio: true,
     });
     screenStream = stream;

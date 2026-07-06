@@ -25,6 +25,13 @@
           <div class="screen-placeholder" id="screenPlaceholder">
             <p class="placeholder-icon">🖥️</p>
             <p>화면 공유 대기 중...</p>
+            <label class="share-quality-row">
+              <span>화질</span>
+              <select id="shareQualitySelect">
+                <option value="standard">표준 (1080p, 30fps)</option>
+                <option value="high">고화질 (1080p, 60fps)</option>
+              </select>
+            </label>
             <button type="button" class="share-start-btn" id="shareStartBtn">화면 공유 시작</button>
           </div>
           <video class="screen-video" id="screenVideo" autoplay playsinline muted></video>
