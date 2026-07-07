@@ -306,6 +306,21 @@ button {
   background: rgba(70, 130, 180, 0.85);
 }
 
+/* 시청자가 공유받은 화면의 소리 크기를 직접 조절할 수 있는 슬라이더 (공유하는 사람
+   본인 화면은 항상 음소거라서 의미가 없으므로 시청 중일 때만 보여준다). */
+.screen-volume-slider {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 2;
+  width: 120px;
+  accent-color: var(--accent);
+}
+
+.screen-volume-slider[hidden] {
+  display: none;
+}
+
 /* 리액션 애니메이션이 재생되는 화면 위 오버레이 */
 .reaction-stage {
   position: absolute;

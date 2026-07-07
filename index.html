@@ -37,6 +37,17 @@
           <video class="screen-video" id="screenVideo" autoplay playsinline muted></video>
           <button type="button" class="share-stop-btn" id="shareStopBtn">⏹ 공유 중지</button>
           <button type="button" class="unmute-btn" id="unmuteBtn" hidden>🔇 소리 켜기</button>
+          <input
+            type="range"
+            class="screen-volume-slider"
+            id="screenVolumeSlider"
+            min="0"
+            max="1"
+            step="0.05"
+            value="1"
+            title="소리 크기"
+            hidden
+          />
           <!-- 리액션 애니메이션이 재생되는 오버레이 -->
           <div class="reaction-stage" id="reactionStage" aria-hidden="true"></div>
         </div>
@@ -90,7 +101,7 @@
           <button class="reaction-btn" data-type="boo" id="btnBoo" type="button">
             <span class="reaction-icon">
               <svg viewBox="0 0 24 24" style="width: 1em; height: 1em; display: block" aria-hidden="true">
-                <circle cx="12" cy="13.5" r="9" fill="#e6432f"></circle>
+                <ellipse cx="12" cy="13.5" rx="9.5" ry="8" fill="#e6432f"></ellipse>
                 <ellipse cx="8.3" cy="9.8" rx="2.6" ry="1.6" fill="#ff8a72" opacity="0.65"></ellipse>
                 <polygon
                   points="12,3 13.8,7.2 18.3,7.2 14.7,9.8 16,14 12,11.3 8,14 9.3,9.8 5.7,7.2 10.2,7.2"

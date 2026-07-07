@@ -701,7 +701,7 @@ const reactionButtons = {
 // 이모지(🍅)는 보는 사람 기기의 이모지 폰트에 따라 모양이 제각각이라, 누가 봐도
 // 똑같이 보이도록 직접 그린 SVG를 쓴다.
 const TOMATO_SVG = `<svg viewBox="0 0 24 24" style="width:100%;height:100%;display:block;" aria-hidden="true">
-  <circle cx="12" cy="13.5" r="9" fill="#e6432f"></circle>
+  <ellipse cx="12" cy="13.5" rx="9.5" ry="8" fill="#e6432f"></ellipse>
   <ellipse cx="8.3" cy="9.8" rx="2.6" ry="1.6" fill="#ff8a72" opacity="0.65"></ellipse>
   <polygon points="12,3 13.8,7.2 18.3,7.2 14.7,9.8 16,14 12,11.3 8,14 9.3,9.8 5.7,7.2 10.2,7.2" fill="#3fa34d"></polygon>
 </svg>`;
@@ -889,6 +889,7 @@ const shareStartBtn = document.getElementById("shareStartBtn");
 const shareStopBtn = document.getElementById("shareStopBtn");
 const screenVideo = document.getElementById("screenVideo");
 const unmuteBtn = document.getElementById("unmuteBtn");
+const screenVolumeSlider = document.getElementById("screenVolumeSlider");
 const viewerCountEl = document.getElementById("viewerCount");
 const shareQualitySelect = document.getElementById("shareQualitySelect");
 
@@ -939,6 +940,10 @@ function attachScreenStream(stream, { local }) {
   unmuteBtn.hidden = true;
   screenVideo.srcObject = stream;
   screenVideo.muted = local;
+  screenVideo.volume = Number(screenVolumeSlider.value);
+  // 소리 크기 조절은 "남이 공유한 화면을 보는" 시청자한테만 의미가 있다
+  // (내가 공유 중인 내 화면은 항상 음소거라서 볼륨을 조절해도 들리지 않는다).
+  screenVolumeSlider.hidden = local;
   screenWrapper.classList.add("sharing");
 
   const playPromise = screenVideo.play();
@@ -954,10 +959,15 @@ function attachScreenStream(stream, { local }) {
   }
 }
 
+screenVolumeSlider.addEventListener("input", () => {
+  screenVideo.volume = Number(screenVolumeSlider.value);
+});
+
 function clearScreenStream() {
   screenVideo.srcObject = null;
   screenWrapper.classList.remove("sharing");
   unmuteBtn.hidden = true;
+  screenVolumeSlider.hidden = true;
 }
 
 function createPeerConnection(peerId) {
@@ -1033,8 +1043,14 @@ TheaterSocket.on("peer-left", ({ id }) => {
 });
 
 // 화면 공유 시작/종료 알림 - 공유가 끝났다는 신호를 받으면(내 것 포함) 시청 화면을 정리한다.
-TheaterSocket.on("screenshare", ({ active }) => {
-  if (!active) clearScreenStream();
+// 이때 그 상대방과 맺어뒀던 RTCPeerConnection도 같이 닫아야 한다 - 안 그러면 다음에
+// 그 사람이 다시 공유를 시작했을 때, 이미 닫혀버린(stale) 연결을 재사용하려다 실패해서
+// 화면이 아예 안 보이는 문제가 생긴다.
+TheaterSocket.on("screenshare", ({ active, from }) => {
+  if (!active) {
+    clearScreenStream();
+    if (from) closePeerConnection(from);
+  }
 });
 
 // 누군가 나에게 화면을 보내겠다는 offer를 보내오면(=상대가 방금 공유를 시작함) 응답한다.
@@ -1087,7 +1103,7 @@ async function startScreenShare() {
     // 감지할 수 있도록 트랙 종료 이벤트를 듣는다.
     stream.getVideoTracks()[0].addEventListener("ended", stopScreenShare);
 
-    TheaterSocket.send("screenshare", { active: true, name: me.name });
+    TheaterSocket.send("screenshare", { active: true, name: me.name, from: myPeerId });
 
     // 지금 접속해 있는 모든 사람에게 화면을 이어서 보내준다.
     knownPeerIds.forEach((peerId) => offerScreenShareTo(peerId));
@@ -1107,7 +1123,7 @@ function stopScreenShare() {
   peerConnections.clear();
 
   clearScreenStream();
-  TheaterSocket.send("screenshare", { active: false, name: me.name });
+  TheaterSocket.send("screenshare", { active: false, name: me.name, from: myPeerId });
 }
 
 shareStartBtn.addEventListener("click", startScreenShare);
