@@ -889,6 +889,7 @@ const shareStartBtn = document.getElementById("shareStartBtn");
 const shareStopBtn = document.getElementById("shareStopBtn");
 const screenVideo = document.getElementById("screenVideo");
 const unmuteBtn = document.getElementById("unmuteBtn");
+const screenVolumeControl = document.getElementById("screenVolumeControl");
 const screenVolumeSlider = document.getElementById("screenVolumeSlider");
 const viewerCountEl = document.getElementById("viewerCount");
 const shareQualitySelect = document.getElementById("shareQualitySelect");
@@ -943,7 +944,7 @@ function attachScreenStream(stream, { local }) {
   screenVideo.volume = Number(screenVolumeSlider.value);
   // 소리 크기 조절은 "남이 공유한 화면을 보는" 시청자한테만 의미가 있다
   // (내가 공유 중인 내 화면은 항상 음소거라서 볼륨을 조절해도 들리지 않는다).
-  screenVolumeSlider.hidden = local;
+  screenVolumeControl.hidden = local;
   screenWrapper.classList.add("sharing");
 
   const playPromise = screenVideo.play();
@@ -967,7 +968,7 @@ function clearScreenStream() {
   screenVideo.srcObject = null;
   screenWrapper.classList.remove("sharing");
   unmuteBtn.hidden = true;
-  screenVolumeSlider.hidden = true;
+  screenVolumeControl.hidden = true;
 }
 
 function createPeerConnection(peerId) {
@@ -1007,7 +1008,9 @@ function boostVideoBitrate(pc) {
     const params = sender.getParameters();
     if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
     params.encodings[0].maxBitrate = preset.maxBitrate;
-    sender.setParameters(params).catch(() => {});
+    // 실패해도 화면 공유 자체는 계속 진행하되, 콘솔에는 남겨서 화질이 이상할 때 원인을
+    // 추적할 수 있게 한다 (전에는 조용히 무시해서 실패해도 알 방법이 없었다).
+    sender.setParameters(params).catch((err) => console.warn("[화면공유] 비트레이트 설정 실패", err));
   });
 }
 

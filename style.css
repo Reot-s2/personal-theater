@@ -306,19 +306,38 @@ button {
   background: rgba(70, 130, 180, 0.85);
 }
 
-/* 시청자가 공유받은 화면의 소리 크기를 직접 조절할 수 있는 슬라이더 (공유하는 사람
-   본인 화면은 항상 음소거라서 의미가 없으므로 시청 중일 때만 보여준다). */
-.screen-volume-slider {
+/* 시청자가 공유받은 화면의 소리 크기를 직접 조절할 수 있는 컨트롤 (공유하는 사람
+   본인 화면은 항상 음소거라서 의미가 없으므로 시청 중일 때만 보여준다). 슬라이더만
+   덩그러니 있으면 뭔지 알아보기 어려워서 스피커 아이콘 + 어두운 배경으로 감쌌다. */
+.screen-volume-control {
   position: absolute;
   bottom: 16px;
   left: 16px;
   z-index: 2;
-  width: 120px;
-  accent-color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 10, 13, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 7px 14px;
+  backdrop-filter: blur(4px);
 }
 
-.screen-volume-slider[hidden] {
+.screen-volume-control[hidden] {
   display: none;
+}
+
+.volume-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  fill: #fff;
+}
+
+.screen-volume-control input[type="range"] {
+  width: 100px;
+  accent-color: var(--accent);
 }
 
 /* 리액션 애니메이션이 재생되는 화면 위 오버레이 */

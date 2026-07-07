@@ -37,17 +37,15 @@
           <video class="screen-video" id="screenVideo" autoplay playsinline muted></video>
           <button type="button" class="share-stop-btn" id="shareStopBtn">⏹ 공유 중지</button>
           <button type="button" class="unmute-btn" id="unmuteBtn" hidden>🔇 소리 켜기</button>
-          <input
-            type="range"
-            class="screen-volume-slider"
-            id="screenVolumeSlider"
-            min="0"
-            max="1"
-            step="0.05"
-            value="1"
-            title="소리 크기"
-            hidden
-          />
+          <div class="screen-volume-control" id="screenVolumeControl" hidden>
+            <svg class="volume-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 5V4L8 9H4z"></path>
+              <path
+                d="M14 4.05v2.06c2.89.86 5 3.54 5 6.89s-2.11 6.03-5 6.89v2.06c4.01-.91 7-4.49 7-8.95s-2.99-8.04-7-8.95z"
+              ></path>
+            </svg>
+            <input type="range" id="screenVolumeSlider" min="0" max="1" step="0.05" value="1" title="소리 크기" />
+          </div>
           <!-- 리액션 애니메이션이 재생되는 오버레이 -->
           <div class="reaction-stage" id="reactionStage" aria-hidden="true"></div>
         </div>
@@ -137,7 +135,7 @@
           <input type="file" id="chatImageInput" accept="image/*" hidden />
           <textarea
             id="chatInput"
-            placeholder="메시지를 입력하세요 (이미지 붙여넣기도 가능)"
+            placeholder="메시지를 입력하세요."
             autocomplete="off"
             maxlength="200"
             rows="1"
