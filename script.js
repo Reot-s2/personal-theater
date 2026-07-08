@@ -1008,6 +1008,12 @@ function boostVideoBitrate(pc) {
     const params = sender.getParameters();
     if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
     params.encodings[0].maxBitrate = preset.maxBitrate;
+    // 대역폭이 부족해질 때 브라우저가 화질을 낮추는 두 가지 방식이 있는데
+    // (해상도를 줄이거나 / 프레임을 떨어뜨리거나), 기본값(balanced)으로 두면
+    // 해상도는 유지한 채 비트만 부족해져서 블록 깨짐(모자이크) 현상이 심하게 난다.
+    // "maintain-framerate"로 지정하면 프레임은 유지하고 대신 해상도를 줄여서,
+    // 작더라도 깨끗한 화면을 우선하게 한다.
+    params.degradationPreference = "maintain-framerate";
     // 실패해도 화면 공유 자체는 계속 진행하되, 콘솔에는 남겨서 화질이 이상할 때 원인을
     // 추적할 수 있게 한다 (전에는 조용히 무시해서 실패해도 알 방법이 없었다).
     sender.setParameters(params).catch((err) => console.warn("[화면공유] 비트레이트 설정 실패", err));
